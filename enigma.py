@@ -4,6 +4,8 @@ Created on Tue Jan  2 13:15:37 2018
 
 @author: e0008730
 """
+import sys
+
 ENIGMA_ORDER = 26
 
 class EnigmaNum(object):
@@ -19,13 +21,13 @@ class EnigmaNum(object):
     
     def __sub__(self, num):
         return EnigmaNum(self.value - num.value)
-    
+    #to use dictionary
     def __eq__(self, num):
         return (self.value==num.value)
     
     def __cmp__(self,num):
         return (self.value - num.value)
-    
+    #must be defined to be used as key of dictionary
     def __hash__(self):
         return self.value
     
@@ -45,15 +47,39 @@ class Rotor:
             raise Exception("wrong length for rotor input")
         else:
             self.proj = {EnigmaNum(i): EnigmaNum(ord(rotor_upper[i]) - 65) for i in range(ENIGMA_ORDER)}
+
+
+rotor_type = {}
+rotor_type['Commercial_IC'  ] = 'DMTWSILRUYQNKFEJCAZBPGXOHV'
+rotor_type['Commercial_IIC' ] = 'HQZGPJTMOBLNCIFDYAWVEUSRKX'
+rotor_type['Commercial_IIIC'] = 'UQNTLSZFMREHDPXKIBVYGJCWOA'
+ 
+class ENIGMA:
+    rotors = []
+    _rotor_num = 0
+    def __init__(self, rotor_num : int, rotor_type_used : list):
+        self._rotor_num = rotor_num
+        if(rotor_num == len(rotor_type_used)):
+            for type in rotor_type_used:
+                self.rotors.append(Rotor(rotor_type[type]))
+        else:
+            sys.exit("rotor number does not fit!\n")
         
-
-
+    def encrypt(self, rotor_pos, list_of_EnigmaNum):
+        for letter in list_of_EnigmaNum:
+            temp = letter
+            for rotor in self.rotors:
+                temp = rotor.proj[temp]
+    
+    def decrypt(self, rotor_pos, list_of_EnigmaNum):
+        return 0
 
 a = EnigmaNum(67)
 b = EnigmaNum(16)
 print(a-b)
 print((a-b).tochar())
 
-L = Rotor('DMTWSILRUYQNKFEJCAZBPGXOHV')
+
+L = Rotor(rotor_type['Commercial_IIIC'])
 #print(L.proj)
-print(L.proj[EnigmaNum(6)].tochar())
+print(L.proj[EnigmaNum(25)].tochar())
