@@ -18,44 +18,45 @@ def chartoenig(ch : str):
 #this approach is more complicated, but more general in the sense of
 #being extended to discrete field
 class EnigmaNum(object):
-    value = 0
+    _value = 0
     def __init__(self, value_input: int):
-        self.value = value_input % ENIGMA_ORDER
+        self._value = value_input % ENIGMA_ORDER
     #arithmetic operations
     def __neg__(self):
-        return EnigmaNum(ENIGMA_ORDER - self.value)
+        return EnigmaNum(ENIGMA_ORDER - self._value)
     def __add__(self, num):
-        return EnigmaNum(self.value + num.value)
+        return EnigmaNum(self._value + num._value)
     def __sub__(self, num):
-        return EnigmaNum(self.value - num.value)
+        return EnigmaNum(self._value - num._value)
     #to use dictionary
     def __eq__(self, num):
-        return (self.value==num.value)
+        return (self._value==num._value)
     def __cmp__(self,num):
-        return (self.value - num.value)
+        return (self.value - num._value)
     #must be defined to be used as key of dictionary
     def __hash__(self):
-        return self.value
+        return self._value
     #for print
     def __str__(self) -> str:
-        return "{0}".format(self.value)
+        return "{0}".format(self._value)
     
     def tochar(self):
         #ord('A') is 65
-        return chr(65 + self.value)
+        return chr(65 + self._value)
 
 #base class for rotors, reflectors and plugboards
 #since they are all some kind of letter substitution
 #here we use the class EnigmaNum instead of letters
 class SubstitutionCipher:
     #substitute table
-    _table = {}
+    #_table = {}
     #for example, if the string is AECBDF
     #then the sub table turns A to A, B to E, C to C, D to B, E to D and F to F
     def __init__(self, sub_in_char : str):
         rotor_upper = sub_in_char.upper()
         if self._check_table_consistency(rotor_upper)==True:
             #ord('A') is 65
+            #substitute table
             self._table  = {EnigmaNum(i) : EnigmaNum(ord(rotor_upper[i]) - 65) for i in range(ENIGMA_ORDER)}
         else:
             sys.exit("substitution table consistency issue")
@@ -63,7 +64,7 @@ class SubstitutionCipher:
     def substitute(self, enigmanum : EnigmaNum) -> EnigmaNum:
         return self._table[enigmanum]
 
-    def _check_table_consistency(self, sub_in_char : str):
+    def _check_table_consistency(self, sub_in_char : str) -> bool:
         #for a substitution, we must guarantee that each letter appears only once
         temp_dict = {chr(ord('A')+i) : 0 for i in range(ENIGMA_ORDER)}
         for char in sub_in_char:
@@ -85,7 +86,7 @@ class SubstitutionCipher:
 class PlugBoard(SubstitutionCipher):
     def __init__(self, sub_in_char : str):
         SubstitutionCipher.__init__(self, sub_in_char)
-    def _check_table_consistency(self, sub_in_char : str):
+    def _check_table_consistency(self, sub_in_char : str) -> bool:
         if super(PlugBoard, self)._check_table_consistency(sub_in_char) == False:
             return False
         else:
@@ -105,7 +106,7 @@ class PlugBoard(SubstitutionCipher):
 class Reflector(SubstitutionCipher):
     def __init__(self, sub_in_char : str):
         SubstitutionCipher.__init__(self, sub_in_char)
-    def _check_table_consistency(self, sub_in_char : str):
+    def _check_table_consistency(self, sub_in_char : str) -> bool:
         if super(Reflector, self)._check_table_consistency(sub_in_char) == False:
             return False
         else:
@@ -123,12 +124,13 @@ class Reflector(SubstitutionCipher):
 class Rotor(SubstitutionCipher):
     #_table specify how to substitute before the reflector
     #_table_back specify how to substitute after the reflector
-    _table_back = {}
-    _count = EnigmaNum(0)
+    #_table_back = {}
+    #_count = EnigmaNum(0)
     def __init__(self, wire_table_in_char : str):
         SubstitutionCipher.__init__(self, wire_table_in_char)
         rotor_upper = wire_table_in_char.upper()
         self._table_back = {EnigmaNum(ord(rotor_upper[i]) - 65) : EnigmaNum(i) for i in range(ENIGMA_ORDER)}
+        self._count = EnigmaNum(0)
         
     def set_position(self, enigmanum):
         self._count = enigmanum
@@ -176,17 +178,16 @@ class EnigmaMachine:
             self._rotors.append(Rotor(rotor_type[type]))
     
     #the steps for encrypt and decrypt are the same
-    def encrypt(self, rotor_pos, list_of_EnigmaNum : str):
+    def encrypt(self, rotor_pos : str, input_message : str):
         #set positions of rotors
         if len(self._rotors) == len(rotor_pos):
             for i in range(len(rotor_pos)):
                 self._rotors[i].set_position(chartoenig(rotor_pos[i]))
         else:
             sys.exit("Number of rotors does not fit!!!\n")   
-        
         #encrypt a string
         output = ""
-        for letter in list_of_EnigmaNum.upper():
+        for letter in input_message.upper():
             #encrypt a single letter
             temp = chartoenig(letter)
             #pass through rotors
@@ -198,11 +199,11 @@ class EnigmaMachine:
             for rotor in reversed(self._rotors):
                 temp = rotor.substitute_back(temp)
             output = output + temp.tochar()
-            #rotate th rotors
+            #rotate th rotors accordingly
             i = 0
             while(i < len(self._rotors) and self._rotors[i].rotate() ):
                i = i + 1
-        
+        #
         return output
                 
     
@@ -214,10 +215,10 @@ if __name__ == "__main__":
 #    #test reflector
 #    ref = Reflector('EJMZALYXVBWFCRQUONTSPIKHGD')
 #    print(ref.sub(EnigmaNum(6)))
-    
+      
     rotors = ['IC','IIC','IIIC']
     enigma = EnigmaMachine(rotors, 'A')
-    
+
     #message = 'myxgoodxfriendxforxthexsecondxtimexinxourxhistoryxaxbritishxprimexministerxhasxreturnedxfromxgermanyxbringxpeacexwithxhonours'
     message = 'helloworld'
     encode = enigma.encrypt('AAA',message)
