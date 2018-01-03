@@ -54,16 +54,16 @@ class SubstitutionCipher:
     #then the sub table turns A to A, B to E, C to C, D to B, E to D and F to F
     def __init__(self, sub_in_char : str):
         rotor_upper = sub_in_char.upper()
-        if self._check_substi_consistency(rotor_upper)==True:
+        if self._check_table_consistency(rotor_upper)==True:
             #ord('A') is 65
             self._table  = {EnigmaNum(i) : EnigmaNum(ord(rotor_upper[i]) - 65) for i in range(ENIGMA_ORDER)}
         else:
             sys.exit("substitution table consistency issue")
     #substitude on EnigmaNum to another        
-    def sub(self, enigmanum : EnigmaNum) -> EnigmaNum:
+    def substitute(self, enigmanum : EnigmaNum) -> EnigmaNum:
         return self._table[enigmanum]
 
-    def _check_substi_consistency(self, sub_in_char : str):
+    def _check_table_consistency(self, sub_in_char : str):
         #for a substitution, we must guarantee that each letter appears only once
         temp_dict = {chr(ord('A')+i) : 0 for i in range(ENIGMA_ORDER)}
         for char in sub_in_char:
@@ -85,8 +85,8 @@ class SubstitutionCipher:
 class PlugBoard(SubstitutionCipher):
     def __init__(self, sub_in_char : str):
         SubstitutionCipher.__init__(self, sub_in_char)
-    def _check_substi_consistency(self, sub_in_char : str):
-        if super(PlugBoard, self)._check_substi_consistency(sub_in_char) == False:
+    def _check_table_consistency(self, sub_in_char : str):
+        if super(PlugBoard, self)._check_table_consistency(sub_in_char) == False:
             return False
         else:
             temp_dict = {chr(ord('A')+i) : sub_in_char[i] for i in range(ENIGMA_ORDER)}
@@ -105,8 +105,8 @@ class PlugBoard(SubstitutionCipher):
 class Reflector(SubstitutionCipher):
     def __init__(self, sub_in_char : str):
         SubstitutionCipher.__init__(self, sub_in_char)
-    def _check_substi_consistency(self, sub_in_char : str):
-        if super(Reflector, self)._check_substi_consistency(sub_in_char) == False:
+    def _check_table_consistency(self, sub_in_char : str):
+        if super(Reflector, self)._check_table_consistency(sub_in_char) == False:
             return False
         else:
             temp_dict = {chr(ord('A')+i) : sub_in_char[i] for i in range(ENIGMA_ORDER)}
@@ -120,26 +120,16 @@ class Reflector(SubstitutionCipher):
 #rotors could do any bijective mapping
 #therefore a backward table is also needed
 #rotation is the key feature of rotors
-class Rotor:
-    #specify how to substitute before the reflector
-    _wiring_table_forward = {}
-    #specify how to substitute after the reflector
-    _wiring_table_backward = {}
+class Rotor(SubstitutionCipher):
+    #_table specify how to substitute before the reflector
+    #_table_back specify how to substitute after the reflector
+    _table_back = {}
     _count = EnigmaNum(0)
     def __init__(self, wire_table_in_char : str):
-        #the rotor_input should give a bijection of the field to itself 
+        SubstitutionCipher.__init__(self, wire_table_in_char)
         rotor_upper = wire_table_in_char.upper()
-        if len(wire_table_in_char) != ENIGMA_ORDER:
-            sys.exit("wrong length for rotor input")
-        else:
-            #ord('A') is 65
-            self._wiring_table_forward  = {EnigmaNum(i) : EnigmaNum(ord(rotor_upper[i]) - 65) for i in range(ENIGMA_ORDER)}
-            self._wiring_table_backward = {EnigmaNum(ord(rotor_upper[i]) - 65) : EnigmaNum(i) for i in range(ENIGMA_ORDER)}
-        #check consistency of the wire table
-        #if self._check_wire_table(rotor_upper)==False:
-            #sys.exit("consistency issue with wire table")
+        self._table_back = {EnigmaNum(ord(rotor_upper[i]) - 65) : EnigmaNum(i) for i in range(ENIGMA_ORDER)}
         
-    
     def set_position(self, enigmanum):
         self._count = enigmanum
     def show_position(self):
@@ -147,10 +137,10 @@ class Rotor:
     #give an input, turn it into another number
     #core idea of ENIGMA
     #need double check
-    def substitute_forward(self, enigmanum):
-        return self._wiring_table_forward[enigmanum + self._count]
-    def substitute_backward(self, enigmanum):
-        return self._wiring_table_backward[enigmanum] - self._count
+    def substitute(self, enigmanum : EnigmaNum) -> EnigmaNum:
+        return self._table[enigmanum + self._count]
+    def substitute_back(self, enigmanum):
+        return self._table_back[enigmanum] - self._count
     #rotate the rotor, and return a bool value to determine whether to rotate next rotor
     def rotate(self):
         self._count = self._count + EnigmaNum(1)
@@ -162,15 +152,26 @@ class Rotor:
 
 
 rotor_type = {}
-rotor_type['Commercial_IC'  ] = 'DMTWSILRUYQNKFEJCAZBPGXOHV'
-rotor_type['Commercial_IIC' ] = 'HQZGPJTMOBLNCIFDYAWVEUSRKX'
-rotor_type['Commercial_IIIC'] = 'UQNTLSZFMREHDPXKIBVYGJCWOA'
+rotor_type['IC'  ] = 'DMTWSILRUYQNKFEJCAZBPGXOHV'
+rotor_type['IIC' ] = 'HQZGPJTMOBLNCIFDYAWVEUSRKX'
+rotor_type['IIIC'] = 'UQNTLSZFMREHDPXKIBVYGJCWOA'
+
+#UKW stands for the Umkehrwalze in German
+reflector_type = {}
+reflector_type['UKW'] = 'QYHOGNECVPUZTFDJAXWMKISRBL'
+reflector_type['UKW-K'] = 'IMETCGFRAYSQBZXWLHKDVUPOJN'
+reflector_type['A'] = 'EJMZALYXVBWFCRQUONTSPIKHGD'
+reflector_type['B'] = 'YRUHQSLDPXNGOKMIEBFZCWVJAT'
+reflector_type['C'] = 'FVPJIAOYEDRZXWGCTKUQSBNMHL'
+reflector_type['B_thin'] = 'ENKQAUYWJICOPBLMDXZVFTHRGS'
+reflector_type['C_thin'] = 'RDOBJNTKVEHMLFCWZAXGYIPSUQ'
 
 class EnigmaMachine:
     _rotors = []
-    _reflector = Rotor('EJMZALYXVBWFCRQUONTSPIKHGD')
+    #_plugboard = PlugBoard('EJMZALYXVBWFCRQUONTSPIKHGD')
     #assign each rotor a type
-    def __init__(self, rotor_type_used : list):
+    def __init__(self, rotor_type_used : list, ref_type_used : str):
+        self._reflector = Reflector(reflector_type[ref_type_used])
         for type in rotor_type_used:
             self._rotors.append(Rotor(rotor_type[type]))
     
@@ -190,12 +191,12 @@ class EnigmaMachine:
             temp = chartoenig(letter)
             #pass through rotors
             for rotor in self._rotors:
-                temp = rotor.substitute_forward(temp)
+                temp = rotor.substitute(temp)
             #pass through reflector
-            temp = self._reflector.substitute_forward(temp)
+            temp = self._reflector.substitute(temp)
             #pass rotors in reversed order
             for rotor in reversed(self._rotors):
-                temp = rotor.substitute_backward(temp)
+                temp = rotor.substitute_back(temp)
             output = output + temp.tochar()
             #rotate th rotors
             i = 0
@@ -214,9 +215,10 @@ if __name__ == "__main__":
 #    ref = Reflector('EJMZALYXVBWFCRQUONTSPIKHGD')
 #    print(ref.sub(EnigmaNum(6)))
     
-    rotors = ['Commercial_IC','Commercial_IIC','Commercial_IIIC']
-    enigma = EnigmaMachine(rotors)
+    rotors = ['IC','IIC','IIIC']
+    enigma = EnigmaMachine(rotors, 'A')
     
+    #message = 'myxgoodxfriendxforxthexsecondxtimexinxourxhistoryxaxbritishxprimexministerxhasxreturnedxfromxgermanyxbringxpeacexwithxhonours'
     message = 'helloworld'
     encode = enigma.encrypt('AAA',message)
     print(encode)
