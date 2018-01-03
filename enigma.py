@@ -8,7 +8,6 @@ import sys
 
 ENIGMA_ORDER = 26
 
-
 def chartoenig(ch : str):
     return EnigmaNum(ord(ch) - ord('A'))
 
@@ -121,22 +120,12 @@ class EnigmaMachine:
         return output
                 
     
-
-a = EnigmaNum(67)
-b = EnigmaNum(16)
-print(a-b)
-print((a-b).tochar())
-
-
-L = Rotor(rotor_type['Commercial_IIIC'])
-#print(L.proj)
-print(L._wiring_table_forward[EnigmaNum(25)].tochar())
-
-rotors = ['Commercial_IC','Commercial_IIC','Commercial_IIIC']
-enigma = EnigmaMachine(rotors)
-
-message = 'helloworld'
-encode = enigma.encrypt('AAA',message)
-print(encode)
-decode = enigma.encrypt('AAA',encode)
-print(decode)
+if __name__ == "__main__":
+    rotors = ['Commercial_IC','Commercial_IIC','Commercial_IIIC']
+    enigma = EnigmaMachine(rotors)
+    
+    message = 'helloworld'
+    encode = enigma.encrypt('AAA',message)
+    print(encode)
+    decode = enigma.encrypt('AAA',encode)
+    print(decode)
