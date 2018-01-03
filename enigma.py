@@ -10,32 +10,33 @@ import sys
 #be careful to change this value
 ENIGMA_ORDER = 26
 
+#turns a charactor to a EnigmaNum
 def chartoenig(ch : str):
     return EnigmaNum(ord(ch) - ord('A'))
 
+#EnigmaNum, i.e. an additive group of order 26
+#this approach is more complicated, but more general in the sense of
+#being extended to discrete field
 class EnigmaNum(object):
     value = 0
     def __init__(self, value_input: int):
         self.value = value_input % ENIGMA_ORDER
-     
+    #arithmetic operations
     def __neg__(self):
         return EnigmaNum(ENIGMA_ORDER - self.value)
-    
     def __add__(self, num):
         return EnigmaNum(self.value + num.value)
-    
     def __sub__(self, num):
         return EnigmaNum(self.value - num.value)
     #to use dictionary
     def __eq__(self, num):
         return (self.value==num.value)
-    
     def __cmp__(self,num):
         return (self.value - num.value)
     #must be defined to be used as key of dictionary
     def __hash__(self):
         return self.value
-    
+    #for print
     def __str__(self) -> str:
         return "{0}".format(self.value)
     
@@ -78,7 +79,9 @@ class SubstitutionCipher:
             print("wrong input of substitution table")
             return False
 
-
+#plugboard swap pair of letters
+#in history the number of pairs is 4 to 10
+#however the number of pairs is not restricted here
 class PlugBoard(SubstitutionCipher):
     def __init__(self, sub_in_char : str):
         SubstitutionCipher.__init__(self, sub_in_char)
@@ -88,13 +91,35 @@ class PlugBoard(SubstitutionCipher):
         else:
             temp_dict = {chr(ord('A')+i) : sub_in_char[i] for i in range(ENIGMA_ORDER)}
             for key, value in temp_dict.items():
+                #swapping two letters twice means doing nothing
+                if key != temp_dict[value]:
+                    print(key+" and "+value+" are not swapped in plugboard")
+                    return False
+            return True
+
+#reflector swap pair of letters
+#in history the number of pairs 13
+#however the number of pairs is not restricted here
+#currently the reflector is the same with plugboard
+#we may add rotation function to it later
+class Reflector(SubstitutionCipher):
+    def __init__(self, sub_in_char : str):
+        SubstitutionCipher.__init__(self, sub_in_char)
+    def _check_substi_consistency(self, sub_in_char : str):
+        if super(Reflector, self)._check_substi_consistency(sub_in_char) == False:
+            return False
+        else:
+            temp_dict = {chr(ord('A')+i) : sub_in_char[i] for i in range(ENIGMA_ORDER)}
+            #swapping two letters twice means doing nothing
+            for key, value in temp_dict.items():
                 if key != temp_dict[value]:
                     print(key+" and "+value+" are not swapped in plugboard")
                     return False
             return True
          
-    
-
+#rotors could do any bijective mapping
+#therefore a backward table is also needed
+#rotation is the key feature of rotors
 class Rotor:
     #specify how to substitute before the reflector
     _wiring_table_forward = {}
@@ -181,8 +206,13 @@ class EnigmaMachine:
                 
     
 if __name__ == "__main__":
-    
-    plug = PlugBoard('EJMZALYXVBWFCRQUONTSPIKHGD')
+#    #test PlugBoard
+#    plug = PlugBoard('EJMZALYXVBWFCRQUONTSPIKHGD')
+#    print(plug.sub(EnigmaNum(6)))
+#    
+#    #test reflector
+#    ref = Reflector('EJMZALYXVBWFCRQUONTSPIKHGD')
+#    print(ref.sub(EnigmaNum(6)))
     
     rotors = ['Commercial_IC','Commercial_IIC','Commercial_IIIC']
     enigma = EnigmaMachine(rotors)
