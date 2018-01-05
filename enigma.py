@@ -6,6 +6,8 @@ Created on Tue Jan  2 13:15:37 2018
 """
 import sys
 
+'a module to realize Enigma machine'
+
 #for enigma, the order of the additive group is 26
 #be careful to change this value
 ENIGMA_ORDER = 26
@@ -150,28 +152,56 @@ class Rotor(SubstitutionCipher):
 
 
 rotor_type = {}
-rotor_type['IC'  ] = 'DMTWSILRUYQNKFEJCAZBPGXOHV'
-rotor_type['IIC' ] = 'HQZGPJTMOBLNCIFDYAWVEUSRKX'
-rotor_type['IIIC'] = 'UQNTLSZFMREHDPXKIBVYGJCWOA'
+rotor_type["IC"] = "DMTWSILRUYQNKFEJCAZBPGXOHV"
+rotor_type["IIC"] = "HQZGPJTMOBLNCIFDYAWVEUSRKX"
+rotor_type["IIIC"] = "UQNTLSZFMREHDPXKIBVYGJCWOA"
+
+
+rotor_type["Rocket-I"] = "JGDQOXUSCAMIFRVTPNEWKBLZYH"
+rotor_type["Rocket-II"] = "NTZPSFBOKMWRCJDIVLAEYUXHGQ"
+rotor_type["Rocket-III"] = "JVIUBHTCDYAKEQZPOSGXNRMWFL"
+rotor_type["Rocket-ETW"] = "QWERTZUIOASDFGHJKPYXCVBNML"
+
+
+rotor_type["I-K"] = "PEZUOHXSCVFMTBGLRINQJWAYDK"
+rotor_type["II-K"] = "ZOUESYDKFWPCIQXHMVBLGNJRAT"
+rotor_type["III-K"] = "EHRVXGAOBQUSIMZFLYNWKTPDJC"
+rotor_type["ETW-K"] = "QWERTZUIOASDFGHJKPYXCVBNML"
+
+
+rotor_type["I"] = "EKMFLGDQVZNTOWYHXUSPAIBRCJ"
+rotor_type["II"] = "AJDKSIRUXBLHWTMCQGZNPYFVOE"
+rotor_type["III"] = "BDFHJLCPRTXVZNYEIWGAKMUSQO"
+rotor_type["IV"] = "ESOVPZJAYQUIRHXLNFTGKDCMWB"
+rotor_type["V"] = "VZBRGITYUPSDNHLXAWMJQOFECK"
+rotor_type["VI"] = "JPGVOUMFYQBENHZRDKASXLICTW"
+rotor_type["VII"] = "NZJHGRCXMYSWBOUFAIVLPEKQDT"
+rotor_type["VIII"] = "FKQHTLXOCBJSPDZRAMEWNIUYGV"
+
+rotor_type["Beta"] = "LEYJVCNIXWPBQMDRTAKZGFUHOS"
+rotor_type["Gamma"] = "FSOKANUERHMBTIYCWLQPZXVGJD"
 
 #UKW stands for the Umkehrwalze in German
 reflector_type = {}
-reflector_type['UKW'] = 'QYHOGNECVPUZTFDJAXWMKISRBL'
-reflector_type['UKW-K'] = 'IMETCGFRAYSQBZXWLHKDVUPOJN'
-reflector_type['A'] = 'EJMZALYXVBWFCRQUONTSPIKHGD'
-reflector_type['B'] = 'YRUHQSLDPXNGOKMIEBFZCWVJAT'
-reflector_type['C'] = 'FVPJIAOYEDRZXWGCTKUQSBNMHL'
-reflector_type['B_thin'] = 'ENKQAUYWJICOPBLMDXZVFTHRGS'
-reflector_type['C_thin'] = 'RDOBJNTKVEHMLFCWZAXGYIPSUQ'
+reflector_type["UKW"] = "QYHOGNECVPUZTFDJAXWMKISRBL"
+reflector_type["UKW-K"] = "IMETCGFRAYSQBZXWLHKDVUPOJN"
+reflector_type["Reflector-A"] = "EJMZALYXVBWFCRQUONTSPIKHGD"
+reflector_type["Reflector-B"] = "YRUHQSLDPXNGOKMIEBFZCWVJAT"
+reflector_type["Reflector-C"] = "FVPJIAOYEDRZXWGCTKUQSBNMHL"
+reflector_type["Reflector-B-Thin"] = "ENKQAUYWJICOPBLMDXZVFTHRGS"
+reflector_type["Reflector-C-Thin"] = "RDOBJNTKVEHMLFCWZAXGYIPSUQ"
 
 class EnigmaMachine:
-    _rotors = []
+    #_rotors = []
     #_plugboard = PlugBoard('EJMZALYXVBWFCRQUONTSPIKHGD')
     #assign each rotor a type
     def __init__(self, rotor_type_used : list, ref_type_used : str):
         self._reflector = Reflector(reflector_type[ref_type_used])
-        for type in rotor_type_used:
-            self._rotors.append(Rotor(rotor_type[type]))
+        self._rotors = [Rotor(rotor_type[name]) for name in rotor_type_used]
+        
+#        #cause error
+#        for type in rotor_type_used:
+#            self._rotors.append(Rotor(rotor_type[type]))
     
     #the steps for encrypt and decrypt are the same
     def encrypt(self, input_message : str):        
@@ -206,7 +236,8 @@ class EnigmaMachine:
             for i in range(len(rotor_pos)):
                 self._rotors[i].set_position(chartoenig(rotor_pos[i]))
         else:
-            sys.exit("Number of rotors does not fit!!!\n")
+            #sys.exit("Number of rotors does not fit!!!\n")
+            raise ValueError('Number of rotors does not fit')
     
     def _encrypt_char(self, char : str) -> str:
         #encrypt a single letter
@@ -236,8 +267,8 @@ if __name__ == "__main__":
 #    ref = Reflector('EJMZALYXVBWFCRQUONTSPIKHGD')
 #    print(ref.sub(EnigmaNum(6)))
       
-    rotors = ['IC','IIC','IIIC']
-    enigma = EnigmaMachine(rotors, 'A')
+    rotors = ['I','II','III']
+    enigma = EnigmaMachine(rotors, 'Reflector-A')
 
     #message = 'myxgoodxfriendxforxthexsecondxtimexinxourxhistoryxaxbritishxprimexministerxhasxreturnedxfromxgermanyxbringxpeacexwithxhonours'
     message = 'HELLOWORLD'
@@ -248,17 +279,6 @@ if __name__ == "__main__":
     decode = enigma.encrypt(encode)
     print(decode)
     
-#    for i in range(ENIGMA_ORDER):
-#        for j in range(ENIGMA_ORDER):
-#            for k in range(ENIGMA_ORDER):
-#                init_pos = []
-#                init_pos.append(chr(65+i))
-#                init_pos.append(chr(65+j))
-#                init_pos.append(chr(65+k))
-#                enigma.set_rotor(init_pos)
-#                decode = enigma.encrypt(encode)
-#                if decode == message:
-#                    print(init_pos, decode)
                 
         
         
