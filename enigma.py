@@ -48,8 +48,6 @@ class EnigmaNum(object):
 #since they are all some kind of letter substitution
 #here we use the class EnigmaNum instead of letters
 class SubstitutionCipher:
-    #substitute table
-    #_table = {}
     #for example, if the string is AECBDF
     #then the sub table turns A to A, B to E, C to C, D to B, E to D and F to F
     def __init__(self, sub_in_char : str):
@@ -122,31 +120,29 @@ class Reflector(SubstitutionCipher):
 #therefore a backward table is also needed
 #rotation is the key feature of rotors
 class Rotor(SubstitutionCipher):
-    #_table specify how to substitute before the reflector
-    #_table_back specify how to substitute after the reflector
-    #_table_back = {}
-    #_count = EnigmaNum(0)
     def __init__(self, wire_table_in_char : str):
         SubstitutionCipher.__init__(self, wire_table_in_char)
         rotor_upper = wire_table_in_char.upper()
+        #_table specify how to substitute before the reflector
+        #_table_back specify how to substitute after the reflector
         self._table_back = {EnigmaNum(ord(rotor_upper[i]) - 65) : EnigmaNum(i) for i in range(ENIGMA_ORDER)}
-        self._count = EnigmaNum(0)
+        self.__pos = EnigmaNum(0)
         
     def set_position(self, enigmanum):
-        self._count = enigmanum
+        self.__pos = enigmanum
     def show_position(self):
-        return self._count
+        return self.__pos
     #give an input, turn it into another number
     #core idea of ENIGMA
     #need double check
     def substitute(self, enigmanum : EnigmaNum) -> EnigmaNum:
-        return self._table[enigmanum + self._count]
+        return self._table[enigmanum + self.__pos]
     def substitute_back(self, enigmanum):
-        return self._table_back[enigmanum] - self._count
+        return self._table_back[enigmanum] - self.__pos
     #rotate the rotor, and return a bool value to determine whether to rotate next rotor
     def rotate(self):
-        self._count = self._count + EnigmaNum(1)
-        if self._count == EnigmaNum(0):
+        self.__pos = self.__pos + EnigmaNum(1)
+        if self.__pos == EnigmaNum(0):
             return True
         else:
             return False
@@ -178,13 +174,7 @@ class EnigmaMachine:
             self._rotors.append(Rotor(rotor_type[type]))
     
     #the steps for encrypt and decrypt are the same
-    def encrypt(self, rotor_pos : str, input_message : str):
-        #set positions of rotors
-        if len(self._rotors) == len(rotor_pos):
-            for i in range(len(rotor_pos)):
-                self._rotors[i].set_position(chartoenig(rotor_pos[i]))
-        else:
-            sys.exit("Number of rotors does not fit!!!\n")   
+    def encrypt(self, input_message : str):        
         #encrypt a string
         output = ""
         for letter in input_message.upper():
@@ -203,9 +193,39 @@ class EnigmaMachine:
             i = 0
             while(i < len(self._rotors) and self._rotors[i].rotate() ):
                i = i + 1
-        #
         return output
-                
+        
+#        #alternative way of using map
+#        #sometimes causes mysterious mistakes
+#        kk = list(map(self._encrypt_char, input_message))
+#        return ''.join(kk)
+    
+    def set_rotor(self, rotor_pos : str):
+        #set positions of rotors
+        if len(self._rotors) == len(rotor_pos):
+            for i in range(len(rotor_pos)):
+                self._rotors[i].set_position(chartoenig(rotor_pos[i]))
+        else:
+            sys.exit("Number of rotors does not fit!!!\n")
+    
+    def _encrypt_char(self, char : str) -> str:
+        #encrypt a single letter
+        temp = chartoenig(char)
+        #pass through rotors
+        for rotor in self._rotors:
+            temp = rotor.substitute(temp)
+        #pass through reflector
+        temp = self._reflector.substitute(temp)
+        #pass rotors in reversed order
+        for rotor in reversed(self._rotors):
+            temp = rotor.substitute_back(temp)
+        #rotate th rotors accordingly
+        i = 0
+        while(i < len(self._rotors) and self._rotors[i].rotate() ):
+           i = i + 1
+        return temp.tochar()
+
+        
     
 if __name__ == "__main__":
 #    #test PlugBoard
@@ -220,8 +240,31 @@ if __name__ == "__main__":
     enigma = EnigmaMachine(rotors, 'A')
 
     #message = 'myxgoodxfriendxforxthexsecondxtimexinxourxhistoryxaxbritishxprimexministerxhasxreturnedxfromxgermanyxbringxpeacexwithxhonours'
-    message = 'helloworld'
-    encode = enigma.encrypt('AAA',message)
+    message = 'HELLOWORLD'
+    enigma.set_rotor('AAA')
+    encode = enigma.encrypt(message)
     print(encode)
-    decode = enigma.encrypt('AAA',encode)
+    enigma.set_rotor('AAA')
+    decode = enigma.encrypt(encode)
     print(decode)
+    
+#    for i in range(ENIGMA_ORDER):
+#        for j in range(ENIGMA_ORDER):
+#            for k in range(ENIGMA_ORDER):
+#                init_pos = []
+#                init_pos.append(chr(65+i))
+#                init_pos.append(chr(65+j))
+#                init_pos.append(chr(65+k))
+#                enigma.set_rotor(init_pos)
+#                decode = enigma.encrypt(encode)
+#                if decode == message:
+#                    print(init_pos, decode)
+                
+        
+        
+    enigma.set_rotor('AAA')
+    out = ''
+    for a in message:
+        #print(enigma._encrypt_char(a))
+        out = out + enigma._encrypt_char(a)
+    print(out)
