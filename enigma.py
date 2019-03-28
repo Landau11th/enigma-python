@@ -46,6 +46,42 @@ class EnigmaNum(object):
         #ord('A') is 65
         return chr(65 + self._value)
 
+#possible immutable implementation of Enigma. But takes longer time
+#why??????
+#class EnigmaNum(object):
+#    __slots__ = ["_value"]
+#    def __init__(self, value_input: int = 0):
+#        super(EnigmaNum, self).__setattr__("_value", value_input % ENIGMA_ORDER)
+#        
+#    def __setattr__(self, name, value):
+#        """"""
+#        msg = "'%s' has no attribute %s" % (self.__class__, name)
+#        raise AttributeError(msg)
+#    #arithmetic operations
+#    def __neg__(self):
+#        return EnigmaNum(ENIGMA_ORDER - self._value)
+#    def __add__(self, num):
+#        return EnigmaNum(self._value + num._value)
+#    def __sub__(self, num):
+#        return EnigmaNum(self._value - num._value)
+#    #to use dictionary
+#    def __eq__(self, num):
+#        return (self._value==num._value)
+#    def __cmp__(self,num):
+#        return (self.value - num._value)
+#    #must be defined to be used as key of dictionary
+#    def __hash__(self):
+#        return self._value
+#    #for print
+#    def __str__(self) -> str:
+#        return "{0}".format(self._value)
+#    
+#    def tochar(self):
+#        #ord('A') is 65
+#        return chr(65 + self._value)
+    
+
+
 #base class for rotors, reflectors and plugboards
 #since they are all some kind of letter substitution
 #here we use the class EnigmaNum instead of letters

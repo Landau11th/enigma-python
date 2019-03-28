@@ -4,7 +4,9 @@ Created on Tue Jan  2 13:15:37 2018
 
 @author: e0008730
 """
-
+from importlib import reload
+import enigma
+reload(enigma)
 from enigma import EnigmaMachine as Enigma
 from enigma import ENIGMA_ORDER as LETTER_MAX
 
@@ -30,7 +32,7 @@ def decipher(encoded : str):
 rotors = ['I','II','III']
 myenigma = Enigma(rotors, 'Reflector-A')
 
-message = 'HELLOWORLDXTHISXISXAXGOODXNEWSXSINCEXTHEXCODEXWORKSXNEXTXWEXWANTXTOXTESTXHOWXFASTXTHEXDECIPHERXCOULDXBEXHEILXHITLER'
+message = 'HELLOWORLD'
 myenigma.set_rotor('AAA')
 encode = myenigma.encrypt(message)
 print(encode)
